@@ -1,0 +1,7 @@
+ipykernel
+numpy
+pandas
+selenium
+webdriver-manager
+undetected-chromedriver
+beautifulsoup4
