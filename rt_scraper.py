@@ -48,8 +48,8 @@ def get_all_critics_review(driver: uc.Chrome, critic_type: str) -> pd.DataFrame:
             review_elements = item.text.split("\n")
             reviews["reviewer"].append(review_elements[0])
             reviews["tagline"].append(review_elements[1])
-            reviews["text"].append(review_elements[2])
-            reviews["score_all"].append(review_elements[3])
+            reviews["text"].append(review_elements[-2]) # Top Critics page has a different format
+            reviews["score_all"].append(review_elements[-1]) # Top Critics page has a different format
 
         # Find the "Next" button and attempt to click it
         next_button = driver.find_elements(By.CSS_SELECTOR, "rt-button")[1]
@@ -86,7 +86,16 @@ if __name__=="__main__":
         driver = switch_review_page(driver, critic)
         dfs.append(get_all_critics_review(driver, critic))
 
-    # Concatenate the collected DataFrames and save them as a CSV file
-    pd.concat(dfs).to_csv("oh_rotten_tomatoes.csv", index=False)
+    # Concatenate the collected DataFrames
+    df = pd.concat(dfs)
+
+    # Some preprocessing to get date and scores
+    df["date"] = pd.to_datetime(df.score_all.str.split("|").str[-1])
+    df["score"] = df.score_all.str.split("|").str[1:-1].str[0].str.strip()
+    df["score"] = df["score"].replace("Original Score: ", "", regex=True)
+
+    # Save to csv
+    df.to_csv("oh_rotten_tomatoes.csv", index=False)
+    
     driver.close()
     driver.quit()
